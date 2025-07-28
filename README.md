@@ -1,9 +1,4 @@
 # TechDeck v1.0
-Custom MacroPad Prototype
-
-
-# 🔧 TechDeck – Custom MacroPad with OLED System Monitor
-
 **TechDeck** is a DIY custom macropad featuring 8 programmable keys, an OLED system monitor, and modular expansion. Built using Arduino-compatible components, it acts as a productivity tool, PC monitor, and USB dock—all in one compact setup.
 
 ---
