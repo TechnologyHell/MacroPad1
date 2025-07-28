@@ -1,0 +1,89 @@
+Install python packages
+###   pip install pyserial psutil
+
+
+
+
+Python Script
+----------------------
+import serial
+import time
+import psutil
+import subprocess
+
+def get_gpu_usage_and_temp():
+    try:
+        # Works on systems with NVIDIA GPU and nvidia-smi
+        output = subprocess.check_output("nvidia-smi --query-gpu=utilization.gpu,temperature.gpu --format=csv,noheader,nounits", shell=True)
+        usage, temp = output.decode().strip().split(", ")
+        return int(usage), int(temp)
+    except:
+        return 0, 0  # Fallback if no GPU or error
+
+# Replace with the COM port of your Pro Micro (check Device Manager on Windows)
+ser = serial.Serial('COM5', 9600)
+
+time.sleep(2)  # Let serial connection stabilize
+
+while True:
+    cpu_percent = psutil.cpu_percent()
+    cpu_temp = psutil.sensors_temperatures().get('coretemp', [{}])[0].get('current', 40)
+
+    gpu_percent, gpu_temp = get_gpu_usage_and_temp()
+
+    line = f"{int(cpu_percent)},{int(cpu_temp)},{int(gpu_percent)},{int(gpu_temp)}"
+    print("Sending:", line)
+    ser.write((line + "\n").encode())
+
+    time.sleep(1)
+----------------------------
+
+
+
+
+
+Setup with OpenHardwareMonitor
+-->-------------
+import serial
+import time
+import psutil
+import xml.etree.ElementTree as ET
+
+def get_openhardwaremonitor_data():
+    try:
+        tree = ET.parse('C:\\OpenHardwareMonitor\\OpenHardwareMonitorReport.xml')
+        root = tree.getroot()
+
+        cpu_temp = 0
+        gpu_temp = 0
+        gpu_load = 0
+
+        for hardware in root.findall('Hardware'):
+            if hardware.attrib['type'] == 'CPU':
+                for sensor in hardware.findall('Sensor'):
+                    if sensor.attrib['name'] == 'Temperature' and 'Core #0' in sensor.attrib['name']:
+                        cpu_temp = float(sensor.attrib['value'])
+            if hardware.attrib['type'] == 'GpuAti':
+                for sensor in hardware.findall('Sensor'):
+                    if sensor.attrib['name'] == 'GPU Core' and sensor.attrib['type'] == 'Load':
+                        gpu_load = float(sensor.attrib['value'])
+                    elif sensor.attrib['name'] == 'GPU Core' and sensor.attrib['type'] == 'Temperature':
+                        gpu_temp = float(sensor.attrib['value'])
+
+        return int(cpu_temp), int(gpu_temp), int(gpu_load)
+    except:
+        return 0, 0, 0
+
+ser = serial.Serial('COM8', 9600)
+time.sleep(2)
+
+while True:
+    cpu_usage = int(psutil.cpu_percent())
+    cpu_temp, gpu_temp, gpu_load = get_openhardwaremonitor_data()
+
+    line = f"{cpu_usage},{cpu_temp},{gpu_load},{gpu_temp}"
+    print("Sending:", line)
+    ser.write((line + "\n").encode())
+
+    time.sleep(1)
+----------------------------

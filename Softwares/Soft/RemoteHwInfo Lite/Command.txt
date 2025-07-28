@@ -1,0 +1,1 @@
+ .RemoteHWInfo.exe -port 6969 -hwinfo 1 -gpuz 0 -afterburner 0
